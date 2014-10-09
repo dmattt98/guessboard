@@ -43,12 +43,21 @@ $(function() {
         versionOkay();
         return;
       }
-      socket.emit('version', {version: version, username: username});
+      socket.emit('version', {version: version, username: username, password: ''});
     });
 
     socket.on('disconnect', function() {
       $('#messages').append($('<li>').text("Disconnected from server."));
       $("#messages").scrollTop($("#messages")[0].scrollHeight);
+    });
+
+    socket.on('dcerror', function (data) {
+      $('#errorBody').html(data.message);
+      $('#errorHeader').html(data.title);
+      $('#errorModal').modal({
+        backdrop: 'static',
+        keyboard: false
+      });
     });
   }
 
@@ -84,7 +93,11 @@ $(function() {
   	});
 
   	socket.on('chat', function(data) {
-  		$('#messages').append($('<li>').text(data.user + ': ' + data.message));
+      var bold = data.user === 'sys';
+  		$('#messages').append($('<li>').html(function() {
+        var content = $(bold ? '<b>' : '<p>').text(data.user + ': ' + data.message);
+        return bold ? $('<div>').html(content).html() : content.html();
+      }));
   		$("#messages").scrollTop($("#messages")[0].scrollHeight);
   	});
 
@@ -121,7 +134,7 @@ $(function() {
   		addClick(lastX, lastY, lastX + 1, lastY, $('#color').spectrum('get').toHexString(), true);
   	});
 
-  	$('#gameCanvas').mouseup(function(e) {
+  	$('body').mouseup(function(e) {
   		paint = false;
   	});
 
